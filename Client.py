@@ -6,19 +6,31 @@ ob = xlrd.open_workbook(file_name)
 
 
 class Input(object):
-    def __init__(self, xh='', dy='', gg='', ll='', tj='', gap=0):
+    def __init__(self, xh='', dy='', gg='', ll='', tj='', tjv=0):
         self.xh = xh
         self.dy = dy
         self.gg = gg
         self.ll = ll
         self.tj = tj
-        self.gap = gap
+        self.tjv = tjv
 
     def get_gap(self):
-        self.gap = self.tj % 0.5
-        return self.gap
+        self.__gap = self.tjv % 0.5
+        return self.__gap
 
     def get_price(self):
+        self.__pricez = self.tjv - self.tjv % 0.5
+        if self.__pricez % 1 == 0:
+            self.__pricez = int(self.__pricez)
+        self.__prices_after = u'\u94dc\u4ef7' + str(self.__pricez) + u'\u4e07\u5143/\u5428'
+        return self.__prices_after
+
+    def get_price_plus(self):
+        self.__price_plus = self.tjv - self.tjv % 0.5 + 0.5
+        if self.__price_plus % 1 == 0:
+            self.__price_plus = int(self.__price_plus)
+        self.__price_plus_after = u'\u94dc\u4ef7' + str(self.__price_plus) + u'\u4e07\u5143/\u5428'
+        return self.__price_plus_after
 
 
 def get_int(num):
@@ -38,6 +50,7 @@ if __name__ == '__main__':
             data.gg = raw_input('Input gg: ')
             data.gg = data.gg.replace('*', u'\xd7')
             data.tj = float(raw_input('Input price of copper: '))
+            data.tjv = data.tj
             data.tj = get_int(data.tj)
             data.tj = u'\u94dc\u4ef7' + data.tj + u'\u4e07\u5143/\u5428'
             data.ll = raw_input('Input letters: ')
@@ -58,15 +71,17 @@ if __name__ == '__main__':
                         key_list2 = key_list[0:len(row_data)]
                         dic = dict(zip(key_list2, row_data))
                         price_dic = dict(zip(price_data, row_data))
-                        for price in price_dic.keys():
-                            if data.tj == price:
-                                print price
+                        per = (1 - ((data.get_gap() / 0.1) * 0.2)) * price_dic[data.get_price()] + ((
+                                                                                                        data.get_gap() / 0.1) * 0.2) * \
+                                                                                                   price_dic[
+                                                                                                       data.get_price_plus()]
+                        print 'Price per meter of %s is %f' % (data.tj, per)
                         letter_list = re.findall(r'a\w|\w', data.ll)
                         for a in letter_list:
                             result += dic.get(a)
                             print 'letter ' + a + ' = ' + str(dic.get(a))
                         length = int(raw_input('Enter length = '))
-                        print 'Result = %f X %d = %f' % (result, length, result * length)
+                        print 'Result = %f + %f X %d = %f' % (per, result, length, (per + result) * length)
                         break
                     elif i == sh.nrows - 1:
                         print 'No such model in sheet ' + str(x + 1) + '!'
