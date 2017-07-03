@@ -1,8 +1,19 @@
 import xlrd
 import re
+import logging
+import logging.handlers
 
+log_file = 'test.log'
 file_name = 'test.xls'
 ob = xlrd.open_workbook(file_name)
+handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=1024 * 1024, backupCount=5)
+fmt = '%(asctime)s - %(message)s'
+formatter = logging.Formatter(fmt)
+handler.setFormatter(formatter)
+
+logger = logging.getLogger('test')
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
 
 class Input(object):
@@ -46,14 +57,19 @@ if __name__ == '__main__':
         while True:
             data = Input()
             data.xh = raw_input('Input xh: ').upper()
+            logger.info('Input xh: %s' % (data.xh))
             data.dy = raw_input('Input dy: ')
+            logger.info('Input dy: %s' % (data.dy))
             data.gg = raw_input('Input gg: ')
+            logger.info('Input gg: %s' % (data.gg))
             data.gg = data.gg.replace('*', u'\xd7')
             data.tj = float(raw_input('Input price of copper: '))
             data.tjv = data.tj
             data.tj = get_int(data.tj)
+            logger.info('Input price of copper: %f' % (data.tjv))
             data.tj = u'\u94dc\u4ef7' + data.tj + u'\u4e07\u5143/\u5428'
             data.ll = raw_input('Input letters: ')
+            logger.info('Input letters: %s' % (data.ll))
 
             key_list = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
                         't', 'u',
@@ -76,16 +92,25 @@ if __name__ == '__main__':
                                                                                                    price_dic[
                                                                                                        data.get_price_plus()]
                         print 'Price per meter of %s is %f' % (data.tj, per)
+                        logger.info('Price per meter of %s is %f' % (data.tj, per))
                         letter_list = re.findall(r'a\w|\w', data.ll)
                         for a in letter_list:
                             result += dic.get(a)
                             print 'letter ' + a + ' = ' + str(dic.get(a))
+                            logger.info('letter ' + a + ' = ' + str(dic.get(a)))
+                        print 'Unit price = %f + %f = %f' % (per, result, per + result)
+                        logger.info('Unit price = %f + %f = %f' % (per, result, per + result))
                         length = int(raw_input('Enter length = '))
-                        print 'Result = %f + %f X %d = %f' % (per, result, length, (per + result) * length)
+                        logger.info('Enter length = %d' % (length))
+                        print 'Result = %f X %d = %f' % (per + result, length, (per + result) * length)
+                        logger.info('Result = %f X %d = %f' % (per + result, length, (per + result) * length))
                         break
                     elif i == sh.nrows - 1:
                         print 'No such model in sheet ' + str(x + 1) + '!'
+                        logger.info('No such model in sheet ' + str(x + 1) + '!')
                         break
             raw_input('Press Enter to continue...\n')
+            logger.info('Press Enter to continue...\n')
     except Exception, e:
         print e
+        logger.info(e)
