@@ -1,11 +1,13 @@
 import xlrd
 import re
-import logging
+import time
 import logging.handlers
 
-log_file = 'test.log'
-file_name = 'test.xls'
-ob = xlrd.open_workbook(file_name)
+# Log File sort by time
+tm = time.strftime('%Y%m%d_%H%M%S', time.localtime(time.time()))
+log_file = str(tm)+'.log'
+
+# Log File handler
 handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=1024 * 1024, backupCount=5)
 fmt = '%(asctime)s - %(message)s'
 formatter = logging.Formatter(fmt)
@@ -15,7 +17,11 @@ logger = logging.getLogger('test')
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
+# Load Excel File
+file_name = 'test.xls'
+ob = xlrd.open_workbook(file_name)
 
+# class input
 class Input(object):
     def __init__(self, xh='', dy='', gg='', ll='', tj='', tjv=0):
         self.xh = xh
@@ -25,10 +31,12 @@ class Input(object):
         self.tj = tj
         self.tjv = tjv
 
+    # calculate the gap of copper price
     def get_gap(self):
         self.__gap = self.tjv % 0.5
         return self.__gap
 
+    # get the price cell of excel
     def get_price(self):
         self.__pricez = self.tjv - self.tjv % 0.5
         if self.__pricez % 1 == 0:
@@ -36,6 +44,7 @@ class Input(object):
         self.__prices_after = u'\u94dc\u4ef7' + str(self.__pricez) + u'\u4e07\u5143/\u5428'
         return self.__prices_after
 
+    # get the price cell +1 of excel
     def get_price_plus(self):
         self.__price_plus = self.tjv - self.tjv % 0.5 + 0.5
         if self.__price_plus % 1 == 0:
@@ -43,7 +52,7 @@ class Input(object):
         self.__price_plus_after = u'\u94dc\u4ef7' + str(self.__price_plus) + u'\u4e07\u5143/\u5428'
         return self.__price_plus_after
 
-
+# get int number
 def get_int(num):
     if num % 1 == 0:
         num = str(int(num))
@@ -73,7 +82,7 @@ if __name__ == '__main__':
 
             key_list = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
                         't', 'u',
-                        'v', 'w', 'x', 'y', 'z', 'aa', 'ab', 'ac', 'ad']
+                        'v', 'w', 'x', 'y', 'z', 'aa', 'ab', 'ac', 'ad', 'ae', 'af', 'ag']
             row_data = []
             price_data = []
             result = 0
@@ -87,6 +96,7 @@ if __name__ == '__main__':
                         key_list2 = key_list[0:len(row_data)]
                         dic = dict(zip(key_list2, row_data))
                         price_dic = dict(zip(price_data, row_data))
+                        # unit price = (1-percent) * x + percent * y
                         per = (1 - ((data.get_gap() / 0.1) * 0.2)) * price_dic[data.get_price()] + ((
                                                                                                         data.get_gap() / 0.1) * 0.2) * \
                                                                                                    price_dic[
