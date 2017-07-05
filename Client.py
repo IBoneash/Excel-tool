@@ -5,7 +5,7 @@ import logging.handlers
 
 # Log File sort by time
 tm = time.strftime('%Y%m%d_%H%M%S', time.localtime(time.time()))
-log_file = str(tm)+'.log'
+log_file = str(tm) + '.log'
 
 # Log File handler
 handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=1024 * 1024, backupCount=5)
@@ -17,9 +17,37 @@ logger = logging.getLogger('test')
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
+
 # Load Excel File
-file_name = 'test.xls'
-ob = xlrd.open_workbook(file_name)
+# file_name = 'test.xls'
+# ob = xlrd.open_workbook(file_name)
+class Xls(object):
+    def __init__(self, __name='test.xls'):
+        self.xls_name = __name
+        self.xlrd_object = None
+        self.isopenfailed = True
+
+    def open(self):
+        try:
+            self.xlrd_object = xlrd.open_workbook(self.xls_name)
+            self.isopenfailed = False
+            pass
+        except:
+            self.isopenfailed = True
+            self.xlrd_object = None
+            print ('Open %s faile \n' % self.xls_name)
+            pass
+        finally:
+            pass
+        return self.xlrd_object
+
+    def get_price_data(self):
+        for x in range(0, self.open().nsheets):
+            self.__sh = self.open().sheet_by_index(x)
+            for y in range(0, self.__sh.nrows):
+                if u'\u5e8f\u53f7' in self.__sh.row_values(y):
+                    return self.__sh.row_values(y)
+
 
 # class input
 class Input(object):
@@ -52,6 +80,7 @@ class Input(object):
         self.__price_plus_after = u'\u94dc\u4ef7' + str(self.__price_plus) + u'\u4e07\u5143/\u5428'
         return self.__price_plus_after
 
+
 # get int number
 def get_int(num):
     if num % 1 == 0:
@@ -61,22 +90,36 @@ def get_int(num):
     return num
 
 
+# get price line in excel
+# def get_price_data():
+#     file_name = 'test.xls'
+#     ob = xlrd.open_workbook(file_name)
+#     for x in range(0, ob.nsheets):
+#         sh = ob.sheet_by_index(x)
+#         if u'\u5e8f\u53f7' in sh.row_values(x):
+#             return x
+
+
 if __name__ == '__main__':
     try:
         while True:
             data = Input()
             data.xh = raw_input('Input xh: ').upper()
             logger.info('Input xh: %s' % (data.xh))
+
             data.dy = raw_input('Input dy: ')
             logger.info('Input dy: %s' % (data.dy))
+
             data.gg = raw_input('Input gg: ')
             logger.info('Input gg: %s' % (data.gg))
             data.gg = data.gg.replace('*', u'\xd7')
+
             data.tj = float(raw_input('Input price of copper: '))
             data.tjv = data.tj
             data.tj = get_int(data.tj)
             logger.info('Input price of copper: %f' % (data.tjv))
             data.tj = u'\u94dc\u4ef7' + data.tj + u'\u4e07\u5143/\u5428'
+
             data.ll = raw_input('Input letters: ')
             logger.info('Input letters: %s' % (data.ll))
 
@@ -86,9 +129,12 @@ if __name__ == '__main__':
             row_data = []
             price_data = []
             result = 0
-            for x in range(0, ob.nsheets):
-                sh = ob.sheet_by_index(x)
-                price_data = sh.row_values(1)
+
+            xl = Xls()
+            for x in range(0, xl.open().nsheets):
+                sh = xl.open().sheet_by_index(x)
+                price_data = xl.get_price_data()
+
                 for i in range(0, sh.nrows):
                     row_data = sh.row_values(i)
                     if data.xh in row_data and data.gg in row_data and (
@@ -96,6 +142,7 @@ if __name__ == '__main__':
                         key_list2 = key_list[0:len(row_data)]
                         dic = dict(zip(key_list2, row_data))
                         price_dic = dict(zip(price_data, row_data))
+
                         # unit price = (1-percent) * x + percent * y
                         per = (1 - ((data.get_gap() / 0.1) * 0.2)) * price_dic[data.get_price()] + ((
                                                                                                         data.get_gap() / 0.1) * 0.2) * \
@@ -103,6 +150,7 @@ if __name__ == '__main__':
                                                                                                        data.get_price_plus()]
                         print 'Price per meter of %s is %f' % (data.tj, per)
                         logger.info('Price per meter of %s is %f' % (data.tj, per))
+
                         letter_list = re.findall(r'a\w|\w', data.ll)
                         for a in letter_list:
                             result += dic.get(a)
@@ -110,17 +158,22 @@ if __name__ == '__main__':
                             logger.info('letter ' + a + ' = ' + str(dic.get(a)))
                         print 'Unit price = %f + %f = %f' % (per, result, per + result)
                         logger.info('Unit price = %f + %f = %f' % (per, result, per + result))
+
                         length = int(raw_input('Enter length = '))
                         logger.info('Enter length = %d' % (length))
+
                         print 'Result = %f X %d = %f' % (per + result, length, (per + result) * length)
                         logger.info('Result = %f X %d = %f' % (per + result, length, (per + result) * length))
                         break
-                    elif i == sh.nrows - 1:
-                        print 'No such model in sheet ' + str(x + 1) + '!'
-                        logger.info('No such model in sheet ' + str(x + 1) + '!')
-                        break
+
+                if i == sh.nrows - 1:
+                    print 'No such model in sheet ' + str(x + 1) + '!'
+                    logger.info('No such model in sheet ' + str(x + 1) + '!')
+                    continue
+
             raw_input('Press Enter to continue...\n')
             logger.info('Press Enter to continue...\n')
+
     except Exception, e:
         print e
         logger.info(e)
