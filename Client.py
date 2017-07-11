@@ -18,9 +18,6 @@ logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
 
-# Load Excel File
-# file_name = 'test.xls'
-# ob = xlrd.open_workbook(file_name)
 class Xls(object):
     def __init__(self, __name='test.xls'):
         self.xls_name = __name
@@ -41,12 +38,11 @@ class Xls(object):
             pass
         return self.xlrd_object
 
-    def get_price_data(self):
-        for x in range(0, self.open().nsheets):
-            self.__sh = self.open().sheet_by_index(x)
-            for y in range(0, self.__sh.nrows):
-                if u'\u5e8f\u53f7' in self.__sh.row_values(y):
-                    return self.__sh.row_values(y)
+    def get_price_data(self, x):
+        self.__sh = self.open().sheet_by_index(x)
+        for y in range(0, self.__sh.nrows):
+            if u'\u5e8f\u53f7' in self.__sh.row_values(y):
+                return self.__sh.row_values(y)
 
 
 # class input
@@ -90,15 +86,6 @@ def get_int(num):
     return num
 
 
-# get price line in excel
-# def get_price_data():
-#     file_name = 'test.xls'
-#     ob = xlrd.open_workbook(file_name)
-#     for x in range(0, ob.nsheets):
-#         sh = ob.sheet_by_index(x)
-#         if u'\u5e8f\u53f7' in sh.row_values(x):
-#             return x
-
 
 if __name__ == '__main__':
     try:
@@ -133,7 +120,7 @@ if __name__ == '__main__':
             xl = Xls()
             for x in range(0, xl.open().nsheets):
                 sh = xl.open().sheet_by_index(x)
-                price_data = xl.get_price_data()
+                price_data = xl.get_price_data(x)
 
                 for i in range(0, sh.nrows):
                     row_data = sh.row_values(i)
