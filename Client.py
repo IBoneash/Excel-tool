@@ -44,6 +44,24 @@ class Xls(object):
             if u'\u5e8f\u53f7' in self.__sh.row_values(y):
                 return self.__sh.row_values(y)
 
+    def get_dy(self):
+        dy_list = []
+        for __x in range(0, self.open().nsheets):
+            self.__sh = self.open().sheet_by_index(__x)
+            dy_row = None
+            for __y in range(0, self.__sh.nrows):
+                if u'\u7535\u538b' in self.__sh.row_values(__y):
+                    for z in range(0, len(self.__sh.row_values(__y))):
+                        if u'\u7535\u538b' in self.__sh.row_values(__y)[z]:
+                            dy_row = __y
+                            dy_line = z
+                            break
+            if dy_row is not None:
+                for __i in range(dy_row + 1, self.__sh.nrows):
+                    if self.__sh.row_values(__i)[dy_line] not in dy_list:
+                        dy_list.append(self.__sh.row_values(__i)[dy_line])
+        return dy_list
+
 
 # class input
 class Input(object):
@@ -86,16 +104,23 @@ def get_int(num):
     return num
 
 
-
 if __name__ == '__main__':
     try:
         while True:
+            xl = Xls()
+            dy_dic = dict(zip(range(1, len(xl.get_dy())+1), xl.get_dy()))
+            print dy_dic
+            logger.info('dy_list = %s' % (dy_dic))
+
             data = Input()
             data.xh = raw_input('Input xh: ').upper()
             logger.info('Input xh: %s' % (data.xh))
 
             data.dy = raw_input('Input dy: ')
             logger.info('Input dy: %s' % (data.dy))
+            if data.dy != '':
+                data.dy = xl.get_dy()[int(data.dy) - 1]
+            print data.dy
 
             data.gg = raw_input('Input gg: ')
             logger.info('Input gg: %s' % (data.gg))
@@ -117,15 +142,13 @@ if __name__ == '__main__':
             price_data = []
             result = 0
 
-            xl = Xls()
             for x in range(0, xl.open().nsheets):
                 sh = xl.open().sheet_by_index(x)
                 price_data = xl.get_price_data(x)
-
                 for i in range(0, sh.nrows):
                     row_data = sh.row_values(i)
                     if data.xh in row_data and data.gg in row_data and (
-                                    data.dy.decode('utf-8') in row_data or data.dy == ''):
+                                    data.dy.decode('utf8') in row_data or data.dy == ''):
                         key_list2 = key_list[0:len(row_data)]
                         dic = dict(zip(key_list2, row_data))
                         price_dic = dict(zip(price_data, row_data))
