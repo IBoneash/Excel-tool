@@ -2,7 +2,9 @@ import xlrd
 import re
 import time
 import logging.handlers
+import sys
 
+type = sys.getdefaultencoding()
 # Log File sort by time
 tm = time.strftime('%Y%m%d_%H%M%S', time.localtime(time.time()))
 log_file = str(tm) + '.log'
@@ -46,6 +48,7 @@ class Xls(object):
 
     def get_dy(self):
         dy_list = []
+        dy_list2 = []
         for __x in range(0, self.open().nsheets):
             self.__sh = self.open().sheet_by_index(__x)
             dy_row = None
@@ -60,7 +63,10 @@ class Xls(object):
                 for __i in range(dy_row + 1, self.__sh.nrows):
                     if self.__sh.row_values(__i)[dy_line] not in dy_list:
                         dy_list.append(self.__sh.row_values(__i)[dy_line])
-        return dy_list
+        for __z in dy_list:
+            __z = __z.encode(type)
+            dy_list2.append(__z)
+        return dy_list2
 
 
 # class input
@@ -108,7 +114,7 @@ if __name__ == '__main__':
     try:
         while True:
             xl = Xls()
-            dy_dic = dict(zip(range(1, len(xl.get_dy())+1), xl.get_dy()))
+            dy_dic = dict(zip(range(1, len(xl.get_dy()) + 1), xl.get_dy()))
             print dy_dic
             logger.info('dy_list = %s' % (dy_dic))
 
@@ -148,7 +154,7 @@ if __name__ == '__main__':
                 for i in range(0, sh.nrows):
                     row_data = sh.row_values(i)
                     if data.xh in row_data and data.gg in row_data and (
-                                    data.dy.decode('utf8') in row_data or data.dy == ''):
+                                    data.dy.decode(type) in row_data or data.dy == ''):
                         key_list2 = key_list[0:len(row_data)]
                         dic = dict(zip(key_list2, row_data))
                         price_dic = dict(zip(price_data, row_data))
