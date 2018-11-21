@@ -19,10 +19,15 @@ logger.setLevel(logging.DEBUG)
 
 
 class Xls(object):
-    def __init__(self, __name='test.xls'):
-        self.xls_name = __name
+    def __init__(self):
+        self.xls_name = None
         self.xlrd_object = None
         self.isopenfailed = True
+        self.xls_frefix = None
+
+    def set_xls_file_name(self):
+        self.xls_frefix = input('Input Excel name: ')
+        self.xls_name = '{}.xls'.format(self.xls_frefix)
 
     def open(self):
         try:
@@ -108,6 +113,7 @@ if __name__ == '__main__':
     try:
         while True:
             xl = Xls()
+            xl.set_xls_file_name()
             dy_dic = dict(zip(range(1, len(xl.get_dy()) + 1), xl.get_dy()))
             print(dy_dic)
             logger.info('dy_list = %s' % (dy_dic))
