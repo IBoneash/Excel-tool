@@ -192,12 +192,15 @@ if __name__ == '__main__':
                         print('Unit price = %f + %f = %f' % (per, result, per + result))
                         logger.info('Unit price = %f + %f = %f' % (per, result, per + result))
 
-                        length = int(input('Enter length = '))
-                        logger.info('Enter length = %d' % (length))
+                        cable_length_input = input('Enter length = ')
+                        cable_length = int(cable_length_input)
+                        logger.info('Enter length = %d' % (cable_length))
 
                         for p, z in zip(per_list, tj_list):
-                            print('Result = %f X %d = %f (%.1f)' % (p + result, length, (p + result) * length, z))
-                            logger.info('Result = %f X %d = %f (%.1f)' % (p + result, length, (p + result) * length, z))
+                            print('Result = %f X %d = %f (%.1f)' % (
+                            p + result, cable_length, (p + result) * cable_length, z))
+                            logger.info('Result = %f X %d = %f (%.1f)' % (
+                            p + result, cable_length, (p + result) * cable_length, z))
                         break
 
                 if i == sh.nrows - 1:
