@@ -97,12 +97,15 @@ def get_unit_price():
     try:
         if row_dict and multi_selection and price:
             unit_price = xls.get_unit_price(row_dict, price, multi_selection)
-            result_txt.insert(END, '计算结果{}万元/吨\n'.format(unit_price))
+            for i in multi_selection:
+                result_txt.insert(END, '[{}]:{} + '.format(i.replace('\n', ''), row_dict[i]))
+            result_txt.insert(END, '[{}]:{}'.format(price, row_dict[price]))
+            result_txt.insert(END, ' ={}元/米\n'.format(unit_price))
             result_txt.see(END)  # 一直显示最新的一行
             result_txt.update()
         elif row_dict and price and not multi_selection:
             unit_price = xls.get_unit_price(row_dict, price)
-            result_txt.insert(END, '计算结果{}万元/吨\n'.format(unit_price))
+            result_txt.insert(END, '[{}]:{}元/米\n'.format(price, unit_price))
             result_txt.see(END)  # 一直显示最新的一行
             result_txt.update()
         elif not row_dict:
@@ -130,6 +133,10 @@ def get_unit_price():
 
 def clear_result():
     result_txt.delete('1.0', 'end')
+
+
+def cal_custom_price():
+    print('1')
 
 
 root = Tk()
@@ -194,17 +201,17 @@ Label(root, text="附加选项列表", font=('Arial', 10)).grid(row=2, column=0)
 multi_list_display = StringVar()
 multi_list_box = Listbox(root, listvariable=multi_list_display, selectmode=MULTIPLE)
 multi_list_box.bind('<ButtonRelease-1>', get_multi_selections)
-multi_list_box.grid(row=3, column=0, sticky=E)
+multi_list_box.grid(row=3, column=0, rowspan=3, sticky=E)
 
 # 显示附加列表滚动条
 scrl_multi = Scrollbar(root)
-scrl_multi.grid(row=3, column=1, sticky=E + N + S)
+scrl_multi.grid(row=3, column=1, rowspan=4, sticky=E + N + S)
 multi_list_box.configure(yscrollcommand=scrl_multi.set)
 scrl_multi['command'] = multi_list_box.yview
 
 # 显示附加列表横向滚动条
 scrl_multi = Scrollbar(root, orient=HORIZONTAL)
-scrl_multi.grid(row=4, column=0, sticky=E + W + N)
+scrl_multi.grid(row=7, column=0, sticky=E + W + N)
 multi_list_box.configure(xscrollcommand=scrl_multi.set)
 scrl_multi['command'] = multi_list_box.xview
 
@@ -222,13 +229,14 @@ file_name_entry.grid(row=1, column=8, sticky=N)
 Button(root, text="Load", command=set_file_name).grid(row=1, column=9, sticky=N)
 
 # 显示结果显示框
+global result_txt
 Label(root, text="计算结果", font=('Arial', 10)).grid(row=2, column=2, columnspan=7, sticky=W)
 result_txt = Text(root, height=15)
-result_txt.grid(row=3, column=2, columnspan=6, rowspan=2, sticky=W + E + N + S)
+result_txt.grid(row=3, column=2, columnspan=6, rowspan=4, sticky=W + E + N + S)
 
 # 显示结果滚动条
 scrl_result = Scrollbar(root)
-scrl_result.grid(row=3, column=7, rowspan=2, sticky=E + S + N)
+scrl_result.grid(row=3, column=7, rowspan=4, sticky=E + S + N)
 result_txt.configure(yscrollcommand=scrl_result.set)
 scrl_result['command'] = result_txt.yview
 
@@ -236,17 +244,20 @@ scrl_result['command'] = result_txt.yview
 Button(root, text="获取单价", command=get_unit_price).grid(row=3, column=8, sticky=W + N)
 
 # 显示清除结果按钮
-Button(root, text="清除结果", command=clear_result).grid(row=5, column=7, sticky=W + N)
+Button(root, text="清除结果", command=clear_result).grid(row=7, column=7, sticky=W + N)
 
 # 显示自定义铜价
-Label(root, text="自定义铜价", font=('Arial', 10)).grid(row=4, column=8, sticky=W)
+Label(root, text="自定义铜价", font=('Arial', 10)).grid(row=5, column=8, sticky=W)
 
 # 显示自定义铜价输入框
 customer_copper_price = StringVar()
 customer_copper_price_entry = Entry(root, textvariable=customer_copper_price)
 # customer_copper_price.set("")
 
-customer_copper_price_entry.grid(row=5, column=8, sticky=W)
+customer_copper_price_entry.grid(row=5, column=8, sticky=W + S)
+
+# 显示计算结果
+Button(root, text="计算结果", command=cal_custom_price).grid(row=6, column=8, sticky=W + N)
 
 root.grid()
 root.mainloop()
