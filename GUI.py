@@ -73,6 +73,8 @@ def get_model(event):
 
 def get_specification(event):
     global specification
+    global multi_selection
+    multi_selection = []
     specification = spe_list_box.get(spe_list_box.curselection())
     set_multi_selections()
 
@@ -132,16 +134,43 @@ def get_unit_price():
 
 
 def clear_result():
+    global result_txt
     result_txt.delete('1.0', 'end')
 
 
+def clear_set(event):
+    customer_copper_price.set("")
+
+
 def cal_custom_price():
-    print('1')
+    customer_price = customer_copper_price.get()
+    try:
+        global result_txt, multi_selection
+        result = xls.get_avg_price(customer_price, row_dict)
+        for item in result:
+            total = 0.0
+            if not multi_selection:
+                result_txt.insert(END, '{}\n'.format(item))
+                result_txt.see(END)  # 一直显示最新的一行
+                result_txt.update()
+            elif multi_selection:
+                for i in multi_selection:
+                    result_txt.insert(END, '[{}]:{} + '.format(i.replace('\n', ''), row_dict[i]))
+                    total += row_dict[i]
+                result_txt.insert(END, '{}'.format(item))
+                total = total + float(item.split(':')[1].split('元/米')[0])
+                result_txt.insert(END, ' ={:.4f}元/米\n'.format(total))
+                result_txt.see(END)  # 一直显示最新的一行
+                result_txt.update()
+    except Exception as e:
+        result_txt.insert(END, '{}\n{}\n'.format('请输入合法的铜价或铜价区间, 如: 4,6', e))
+        result_txt.see(END)  # 一直显示最新的一行
+        result_txt.update()
 
 
 root = Tk()
 root.title("Excel tool")
-root.geometry("1000x500")
+root.geometry("950x500")
 root.resizable(width=False, height=False)
 
 # 显示电压列表
@@ -201,7 +230,7 @@ Label(root, text="附加选项列表", font=('Arial', 10)).grid(row=2, column=0)
 multi_list_display = StringVar()
 multi_list_box = Listbox(root, listvariable=multi_list_display, selectmode=MULTIPLE)
 multi_list_box.bind('<ButtonRelease-1>', get_multi_selections)
-multi_list_box.grid(row=3, column=0, rowspan=3, sticky=E)
+multi_list_box.grid(row=3, column=0, rowspan=4, sticky=W + E + S + N)
 
 # 显示附加列表滚动条
 scrl_multi = Scrollbar(root)
@@ -231,33 +260,40 @@ Button(root, text="Load", command=set_file_name).grid(row=1, column=9, sticky=N)
 # 显示结果显示框
 global result_txt
 Label(root, text="计算结果", font=('Arial', 10)).grid(row=2, column=2, columnspan=7, sticky=W)
-result_txt = Text(root, height=15)
+result_txt = Text(root, height=15, wrap=None)
 result_txt.grid(row=3, column=2, columnspan=6, rowspan=4, sticky=W + E + N + S)
 
 # 显示结果滚动条
 scrl_result = Scrollbar(root)
-scrl_result.grid(row=3, column=7, rowspan=4, sticky=E + S + N)
+scrl_result.grid(row=3, column=8, rowspan=4, sticky=W + S + N)
 result_txt.configure(yscrollcommand=scrl_result.set)
 scrl_result['command'] = result_txt.yview
 
+# 显示结果横向滚动条
+scrl_result_h = Scrollbar(root, orient=HORIZONTAL)
+scrl_result_h.grid(row=7, column=2, columnspan=6, sticky=E + W)
+result_txt.configure(xscrollcommand=scrl_result_h.set)
+scrl_result_h['command'] = result_txt.xview
+
 # 显示获取单价
-Button(root, text="获取单价", command=get_unit_price).grid(row=3, column=8, sticky=W + N)
+Button(root, text="获取单价", command=get_unit_price).grid(row=3, column=8, sticky=N)
 
 # 显示清除结果按钮
-Button(root, text="清除结果", command=clear_result).grid(row=7, column=7, sticky=W + N)
+Button(root, text="清除结果", command=clear_result).grid(row=8, column=7, sticky=W + N)
 
 # 显示自定义铜价
-Label(root, text="自定义铜价", font=('Arial', 10)).grid(row=5, column=8, sticky=W)
+Label(root, text="自定义铜价", font=('Arial', 10)).grid(row=5, column=8, sticky=E)
 
 # 显示自定义铜价输入框
 customer_copper_price = StringVar()
-customer_copper_price_entry = Entry(root, textvariable=customer_copper_price)
-# customer_copper_price.set("")
+customer_copper_price_entry = Entry(root, textvariable=customer_copper_price, width=17)
+customer_copper_price.set("(区间铜价用逗号分隔)")
+customer_copper_price_entry.grid(row=5, column=8, sticky=E + S)
 
-customer_copper_price_entry.grid(row=5, column=8, sticky=W + S)
+customer_copper_price_entry.bind("<FocusIn>", clear_set)
 
 # 显示计算结果
-Button(root, text="计算结果", command=cal_custom_price).grid(row=6, column=8, sticky=W + N)
+Button(root, text="计算结果", command=cal_custom_price).grid(row=6, column=8, sticky=E + N)
 
 root.grid()
 root.mainloop()

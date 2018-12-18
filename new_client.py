@@ -139,8 +139,47 @@ class Xls(object):
         log.debug("获取型号,规格对应列表为:{}".format(spe_list))
         return spe_list
 
-    def get_avg_price(self, custom_price):
+    def get_avg_price(self, custom_price, row_dict):
+        price_dict = []
         price_list = custom_price.split(',')
+        if price_list and len(price_list) == 1:
+            return cal_avg_price(price_list[0], row_dict)
+        elif price_list and len(price_list) == 2:
+            if float(price_list[0]) < float(price_list[1]):
+                for item in range(int(float(price_list[0]) * 10), int(float(price_list[1]) * 10 + 1)):
+                    if item % 10 == 0:
+                        item = int(item / 10)
+                    else:
+                        item = item / 10
+                    price_dict.append("{}".format(cal_avg_price(item, row_dict)[0]))
+                return price_dict
+
+
+def cal_avg_price(price, row_dict, multi_selections=None):
+    price_dict = []
+    if 0 < float(price) % 1 < 0.5:
+        price_low = "铜价{}万元/吨".format(int(float(price)))
+        price_high = "铜价{:.1f}万元/吨".format(int(float(price)) + 0.5)
+        price_avg = (row_dict[price_high] - row_dict[price_low]) * (float(price) - int(float(price))) / 5 + row_dict[
+            price_low]
+        price = "铜价{:.1f}万元/吨".format(price)
+    elif float(price) % 1 > 0.5:
+        price_low = "铜价{:.1f}万元/吨".format(int(float(price)) + 0.5)
+        price_high = "铜价{}万元/吨".format(int(float(price)) + 1)
+        price_avg = (row_dict[price_high] - row_dict[price_low]) * (int(float(price)) + 1 - float(price)) / 5 + \
+                    row_dict[price_low]
+        price = "铜价{:.1f}万元/吨".format(price)
+    elif float(price) % 1 == 0:
+        price_str = float(price)
+        price = "铜价{}万元/吨".format(int(price))
+        price_avg = row_dict[price]
+        price = "铜价{:.1f}万元/吨".format(int(price_str))
+    else:
+        price = "铜价{:.1f}万元/吨".format(price)
+        price_avg = row_dict[price]
+    price_dict.append('[{}]:{:.4f}元/米'.format(price, price_avg))
+    return price_dict
+
 
 # if __name__ == '__main__':
 #     xls = Xls()
@@ -151,7 +190,8 @@ class Xls(object):
 #            '低烟无卤加价\n(元/米）（FF型填0）': 0.6638, '软线R加价\n(元/米)': 0.5647, '铠装22加价\n(元/米）': 1.0303, '铠装23加价\n(元/米）': 1.07,
 #            '铠装32加价\n(元/米）': 2.447, '铠装33加价\n(元/米）': 4.0817, '防白蚁加价（元/米）': 0.4954,
 #            '耐低温（－40℃）聚氯乙烯护套加价(元/米）（GG型、FF型填0）': 0.5152, '铜带屏蔽P2减价（元/米）（无屏蔽填0）': 0.0, '铝塑屏蔽P3减价（元/米）（无屏蔽填0）': 0.0}
-#     # print(xls.get_voltage(var='型号'))
-#     # print(xls.get_row('KYJV', '10×1.5'))
-#     print(xls.get_unit_price(dict, '铜价4.5万元/吨', '耐低温（－40℃）聚氯乙烯护套加价(元/米）（GG型、FF型填0）'))
-# xls.get_spe('KGG')
+#     #     # print(xls.get_voltage(var='型号'))
+#     #     # print(xls.get_row('KYJV', '10×1.5'))
+#     #     print(xls.get_unit_price(dict, '铜价4.5万元/吨', '耐低温（－40℃）聚氯乙烯护套加价(元/米）（GG型、FF型填0）'))
+#     # xls.get_spe('KGG')
+#     print(xls.get_avg_price('4', dic))
